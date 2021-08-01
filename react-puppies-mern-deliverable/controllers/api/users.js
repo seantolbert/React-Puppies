@@ -3,6 +3,7 @@ const jwt = require("jsonwebtoken");
 
 module.exports = {
   create,
+  login
 };
 
 async function create(req, res) {
@@ -21,6 +22,22 @@ async function create(req, res) {
     }
   }
 
+async function login(req, res) {
+    try{
+        const user = await User.findOne({email: req.body.email})
+        if (!user) throw new Error();
+        const match = await bcrypt.compare(req.body.password, user.password);
+        if (match) {
+            const token = createJWT(user);
+            res.json(token)
+        } else {
+            res.status(400).json('Bad Credentials');
+        }
+    } catch {
+        res.status(400).json('Bad Credentials');
+    }
+}
+
 // helper functions:
 function createJWT(user) {
     return jwt.sign(
@@ -30,3 +47,4 @@ function createJWT(user) {
       { expiresIn: '24h' }
     );
   }
+
